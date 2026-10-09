@@ -10,6 +10,8 @@ RUN uv sync --frozen --no-cache
 
 COPY . .
 
-EXPOSE 8000
+RUN chmod a+x scripts/*.sh
+
+ENV PATH="/app/.venv/bin:$PATH"
 
 CMD ["uv", "run", "--no-dev", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

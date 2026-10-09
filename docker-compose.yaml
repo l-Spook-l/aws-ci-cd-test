@@ -1,6 +1,7 @@
 services:
   api:
     build: .
+    command: ["/app/scripts/app_run.sh"]
     ports:
       - "8000:8000"
     env_file:
