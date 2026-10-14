@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     postgres_port: Port
     postgres_db: NonEmptyStr
 
+    s3_bucket_name: NonEmptyStr
+
     # postgres_user_test: NonEmptyStr
     # postgres_password_test: SecretStr
     # postgres_host_test: NonEmptyStr
