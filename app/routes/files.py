@@ -2,6 +2,7 @@ import uuid
 
 import boto3
 from botocore.config import Config
+from botocore.exceptions import ClientError
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.core.config import settings
@@ -67,3 +68,45 @@ def upload_file(file: UploadFile = File(...)) -> dict:
         "message": "File uploaded",
         "key": key,
     }
+
+
+@router.get("/{file_name}/download")
+def get_download_url(file_name: str) -> dict:
+    key = f"uploads/{file_name}"
+
+    try:
+        # проверяет наличие файла.
+        s3.head_object(
+            Bucket=BUCKET,
+            Key=key,
+        )
+
+        # создаёт временную подписанную ссылку.
+        url = s3.generate_presigned_url(
+            ClientMethod="get_object",
+            Params={
+                "Bucket": BUCKET,
+                "Key": key,
+                "ResponseContentDisposition": "inline",  # предлагает браузеру открыть изображение, а не скачивать его.
+            },
+            ExpiresIn=300,  # означает срок действия 5 минут.
+        )
+
+        return {
+            "url": url,
+            "expires_in": 300,
+        }
+
+    except ClientError as exc:
+        error_code = exc.response["Error"]["Code"]
+
+        if error_code in ("404", "NoSuchKey", "NotFound"):
+            raise HTTPException(
+                status_code=404,
+                detail="File not found",
+            ) from exc
+
+        raise HTTPException(
+            status_code=502,
+            detail="S3 request failed",
+        ) from exc
